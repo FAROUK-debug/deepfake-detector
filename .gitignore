@@ -1,0 +1,15 @@
+# the trained model (167 MB) is published as a GitHub release asset, not in git
+models/
+*.h5
+*.keras
+*.part
+# python
+__pycache__/
+.venv/
+venv/
+.pytest_cache/
+.gradio/
+flagged/
+# datasets
+real-vs-fake/
+data/

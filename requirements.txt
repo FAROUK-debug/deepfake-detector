@@ -1,0 +1,6 @@
+tensorflow==2.15.1
+numpy<2
+gradio>=5,<6
+pillow>=10.4
+matplotlib>=3.8
+scikit-learn>=1.4
