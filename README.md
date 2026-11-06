@@ -26,7 +26,7 @@ Test set: 2,000 images never seen in training (balanced). The decision threshold
 **Why the threshold isn't 0.5:**
 - During training, the fake class was up-weighted (×1.2) to catch more fakes.
 - The side effect is a model that is too quick to call a real face fake: at 0.5, about 200 of the 1,000 real test faces were flagged as fake.
-- Moving the threshold to 0.27, picked on validation data, brings that down to 112, almost half. The cost is catching a few fewer fakes (recall 92% → 85%), and accuracy still goes up slightly.
+- Moving the threshold to 0.27, picked on validation data, brings that down to 112, almost half. The cost is catching a few fewer fakes (recall 92% → 85%). Accuracy goes from 86.0% to 86.8%, which is within the margin of error on 2,000 images, so the real gain is fewer false accusations.
 
 ## How it works
 
@@ -56,13 +56,17 @@ image ─► resize 224×224 ─► VGG16 (ImageNet weights, block4+5 fine-tuned
 - **Other generators:** it was trained only on StyleGAN faces, so it is **not** reliable on images from newer generators (diffusion models, face swaps, edited photos). Testing on those would be the next step.
 - **Image format:** it works on aligned, square face crops like the dataset's. Full photos with small faces will give poor results.
 - **Not proof:** a detector like this is a hint, not evidence. The app shows a disclaimer.
+- **Confidence:** the percentage is the model's output rescaled around the threshold, not a calibrated probability.
+- **Known miss:** the example `real_1.jpg` is a real face the model calls FAKE (63%). It stays in the demo on purpose: at about 87% accuracy, the model does make mistakes.
 
 ## Run it
+
+Needs **Python 3.11**: TensorFlow 2.15 has no build for Python 3.12 or newer.
 
 ```bash
 git clone https://github.com/FAROUK-debug/deepfake-detector.git
 cd deepfake-detector
-python -m venv .venv
+py -3.11 -m venv .venv            # macOS/Linux: python3.11 -m venv .venv
 .venv\Scripts\activate            # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 python app.py                     # http://127.0.0.1:7860
@@ -77,7 +81,7 @@ python scripts/evaluate.py --data path/to/real-vs-fake
 python training/train.py   --data path/to/real-vs-fake      # GPU strongly recommended
 ```
 
-Tests (`pytest`) run in GitHub Actions. The model test is skipped there because the model isn't downloaded in CI.
+Tests (`pytest`) run in GitHub Actions, including prediction and Grad-CAM on the real model.
 
 ## Security and privacy
 

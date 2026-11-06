@@ -10,6 +10,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+import app  # noqa: E402
 import detector  # noqa: E402
 
 EXAMPLES = sorted((ROOT / "examples").glob("*.jpg"))
@@ -45,10 +46,16 @@ def test_examples_are_labelled_by_name():
     assert EXAMPLES and all(p.name.startswith(("real_", "fake_")) for p in EXAMPLES)
 
 
+def test_images_over_the_pixel_limit_are_refused():
+    with pytest.raises(app.gr.Error):
+        app.analyse(Image.new("L", (6000, 5000)))
+
+
 @pytest.mark.skipif(not detector.MODEL_PATH.exists(), reason="model file not downloaded")
 def test_model_and_gradcam_on_examples():
     fake = Image.open(ROOT / "examples" / "fake_1.jpg")
     pred = detector.predict(fake)
     assert pred.label == "FAKE"
+    assert detector.predict(Image.open(ROOT / "examples" / "real_2.jpg")).label == "REAL"
     heat = detector.gradcam(fake, pred.label)
     assert heat.shape == (224, 224) and 0 <= heat.min() and heat.max() <= 1
