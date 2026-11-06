@@ -13,7 +13,9 @@ from PIL import Image
 import detector
 
 # Refuse decompression bombs: a face photo never needs more than ~25 megapixels.
-Image.MAX_IMAGE_PIXELS = 25_000_000
+# Pillow only warns at this limit and refuses at twice it, so analyse() checks it too.
+MAX_PIXELS = 25_000_000
+Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 MIN_SIDE = 64
 EXAMPLES = sorted(str(p) for p in (Path(__file__).parent / "examples").glob("*.jpg"))
 
@@ -29,6 +31,8 @@ def analyse(img: Image.Image):
         raise gr.Error("Upload a face image first.")
     if min(img.size) < MIN_SIDE:
         raise gr.Error(f"Image too small ({img.size[0]}×{img.size[1]}). Use at least {MIN_SIDE}×{MIN_SIDE} pixels.")
+    if img.width * img.height > MAX_PIXELS:
+        raise gr.Error(f"Image too large ({img.size[0]}×{img.size[1]}). The limit is 25 megapixels.")
 
     started = time.perf_counter()
     pred = detector.predict(img)
