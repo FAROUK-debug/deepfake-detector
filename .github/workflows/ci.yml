@@ -14,5 +14,10 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -r requirements-dev.txt
-      # The model test is skipped here: the 167 MB model isn't downloaded in CI.
+      # The 167 MB model is cached, so the release file is downloaded only when its hash changes.
+      - uses: actions/cache@v6
+        with:
+          path: models
+          key: model-${{ hashFiles('detector.py') }}
+      - run: python -c "import detector; detector.ensure_model()"
       - run: pytest -q
